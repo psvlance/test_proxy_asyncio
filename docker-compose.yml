@@ -1,0 +1,30 @@
+version: '3.5'
+
+services:
+  test-proxy: &test-proxy
+    container_name: test-proxy
+    image: test-proxy
+    build:
+      context: .
+      dockerfile: compose/proxy/Dockerfile
+    env_file:
+      - compose/proxy/.env
+    links:
+      - test-redis
+    volumes:
+    - ./proxy:/proxy
+    command: /start-proxy
+    ports:
+     - "8080:8080"
+
+  test-tests:
+    <<: *test-proxy
+    container_name: test-tests
+    image: test-tests
+    command: /start-tests
+
+  test-redis:
+    image: redis:3.2
+    container_name: test-redis
+    logging:
+      driver: none

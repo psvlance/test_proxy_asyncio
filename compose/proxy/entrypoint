@@ -1,0 +1,33 @@
+#!/bin/sh
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+
+containers_ready() {
+python << END
+import os
+import sys
+from redis import Redis
+from redis.exceptions import ConnectionError
+
+redis_url = os.environ.get('REDIS_URL', 'localhost')
+r = Redis(redis_url, socket_connect_timeout=1)
+
+try:
+    r.ping()
+except ConnectionError:
+    sys.exit(-1)
+
+sys.exit(0)
+
+END
+}
+until containers_ready; do
+  >&2 echo 'Waiting for containers to become available...'
+  sleep 1
+done
+>&2 echo 'Containers are available'
+
+exec "$@"
